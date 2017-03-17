@@ -4,7 +4,7 @@ from minpy.nn import layers
 from minpy.nn.model import ModelBase
 from minpy.nn.solver import Solver
 from minpy.nn.io import NDArrayIter
-from txt_data_final import *
+from txt_data_final import * # data pre-processing 
 import argparse
 
 
@@ -17,7 +17,7 @@ def softmax_crossentropy(x, y):
     x_dev = x - np.max(x, axis=1, keepdims=True) # minpy doesn't support x.max()
     sm = x_dev - np.log(np.sum(np.exp(x_dev), axis=1, keepdims=True))
     ids = np.arange(0, y.shape[0])*x.shape[1] + y
-    ce = -np.sum(sm.reshape((sm.shape[0]*sm.shape[1],))[ids])/(1.0*y.shape[0])  # minpy doesn't support -1 in shape inference, this line may be risk (y has a different ndim)
+    ce = -np.sum(sm.reshape((sm.shape[0]*sm.shape[1],))[ids])/(1.0*y.shape[0])  # minpy doesn't support -1 in shape inference
     return ce
 
 class LM_RNN(ModelBase):
@@ -52,12 +52,12 @@ class LM_RNN(ModelBase):
             hs.append(hm1)
         hs = np.stack(hs, axis=1).reshape((batch_size*seq_len, self.HID_DIM))
         pred_out = layers.affine(hs, self.params['W_Softmax'], self.params['b_Softmax'])
-        return pred_out.reshape((batch_size, seq_len, self.WORD_DIM)) # it's strange to do so much reshape, but we need the same shape with target
+        return pred_out.reshape((batch_size, seq_len, self.WORD_DIM))
     # the func check_accuracy in nn/solver.py may raise an error because it reduce the prob dim with axis 1 but not the last dim
 
 
     def loss(self, predict, y):
-        return softmax_crossentropy(predict.reshape((predict.shape[0]*predict.shape[1], predict.shape[2])), y.reshape((y.shape[0]*y.shape[1],))) # minpy doesn't support -1 in shape inference, this line may be risk (y has a different ndim)
+        return softmax_crossentropy(predict.reshape((predict.shape[0]*predict.shape[1], predict.shape[2])), y.reshape((y.shape[0]*y.shape[1],))) 
 
 
 def get_data(opts, test=False, post_name='.keep50kr'):
