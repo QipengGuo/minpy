@@ -3,9 +3,26 @@ import numpy as NP
 import minpy.numpy as np
 from minpy.nn.model_builder import *
 from minpy.nn.modules import *
+from minpy.context import set_context, gpu
+
+set_context(gpu(0)) # set the global context with gpu
+
+def softmax_crossentropy(x, y):
+    x = x.reshape((x.shape[0]*x.shape[1], -1))
+    y = y.reshape((-1,))
+
+    # x should be (batch, prob)
+    # y should be (batch, )
+
+    x_dev = x - np.max(x, axis=1, keepdims=True) # minpy doesn't support x.max()
+    sm = x_dev - np.log(np.sum(np.exp(x_dev), axis=1, keepdims=True))
+    ids = np.arange(0, y.shape[0])*x.shape[1] + y
+    ce = -np.sum(sm.reshape((sm.shape[0]*sm.shape[1],))[ids])/(1.0*y.shape[0])  # minpy doesn't support -1 in shape inference
+    return ce
+
 class LMModel(Model):
     def __init__(self, vocab_size=10000, H_DIM =200, EMB_DIM=200):
-        super(LMModel, self).__init__(loss='softmax_loss') # softmax don't support index target 
+        super(LMModel, self).__init__(loss=softmax_crossentropy) # softmax don't support index target 
 
         self._embedding = Embedding(input_dim=vocab_size, output_dim=EMB_DIM) 
         self._rnn = RNN(H_DIM, 'tanh')
@@ -46,6 +63,7 @@ if __name__ == '__main__':
     model = LMModel(vocab_size=vocab_size, H_DIM=200, EMB_DIM=200)
     updater = Updater(model, update_rule='rmsprop', learning_rate=0.001)
 
+    print type(model)
 
     iter_num = 0
     for ep in xrange(50):
@@ -53,7 +71,10 @@ if __name__ == '__main__':
             iter_num += 1
 
             data, labels = unpack_batch(batch)
-            grad_dict, loss = model.grad_and_loss(data, labels)
+            #grad_dict, loss = model.grad_and_loss(data, labels)
+            rets = model.grad_and_loss(data, labels)
+            print type(rets)
+            grad_dict, loss = rets
             updater(grad_dict)
 
             if iter_num % 100 ==0:
