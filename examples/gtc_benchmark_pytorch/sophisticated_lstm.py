@@ -112,7 +112,9 @@ if __name__ == '__main__':
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 0, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.data[0]))
-        
+    tft /= (batch_idx + 1)
+    bt /= (batch_idx + 1)                
+       
 
     model.eval()
     test_loss = 0
@@ -137,8 +139,6 @@ if __name__ == '__main__':
 
     print ift
     ift /= (batch_idx + 1)
-    tft /= (batch_idx + 1)
-    bt /= (batch_idx + 1)                
 
 
     import cPickle as pickle
