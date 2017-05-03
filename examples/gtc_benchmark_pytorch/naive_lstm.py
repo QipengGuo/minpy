@@ -54,7 +54,7 @@ class NaiveLSTM(nn.Module):
             patch = data[:, i]
             h, c = self._step(patch, h, c)
 
-        return F.log_softmax(sefl._linear(h))
+        return F.log_softmax(self._linear(h))
 
 
 if __name__ == '__main__':
